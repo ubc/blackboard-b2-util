@@ -1,4 +1,4 @@
-Utilities classes for Blackboard Building Block
+Utility class for Blackboard Building Block
 ============================================
 
 This tool provides easier interaction with Blackboard APIs.
