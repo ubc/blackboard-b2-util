@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE ivy-module>
 <ivy-module version="2.0">
-    <info organisation="ca.ubc.ctlt" module="BlackboardB2Util"/>
+    <info organisation="ca.ubc.ctlt" module="BlackboardB2Util" revision="1.0.0"/>
     <publications>
-        <artifact name="blackboardb2util" ext="jar" type="jar"/>
-        <artifact name="blackboardb2util" ext="jar" type="source"/>
+        <artifact name="blackboard-b2-util" ext="jar" type="jar"/>
     </publications>
 
     <dependencies>
