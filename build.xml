@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE project>
 
-<project xmlns:ivy="antlib:org.apache.ivy.ant" name="PROJECT_NAME" basedir="." default="dist">
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="B2Util" basedir="." default="dist">
     <property file="build.properties"/>
     <property file="local.properties"/>
     <property name="b2context.url" value="http://projects.oscelot.org/gf/download/frsrelease/669/4384/"/>
     <property name="b2context.zip_basename" value="B2Context-1.2.00"/>
     <property name="b2context.jar" value="b2context-1.2.00.jar"/>
+    <property name="pub.resolver" value="local"/>
 
     <path id="classpath.master">
         <fileset dir="${bb.sdk}">
@@ -45,6 +46,7 @@
 
     <target name="resolve" description="Retrieve dependencies with ivy">
         <ivy:retrieve pattern="${ivy.lib.dir}/[conf]/[artifact]-[type]-[revision].[ext]"/>
+        <ivy:deliver/>
     </target>
 
     <target name="ivy-report" depends="pre" description="Generate ivy dependency report">
@@ -151,7 +153,7 @@
     <target name="run-ci" description="Run all tasks for ci server" depends="test-ci"/>
 
     <target name="publish" depends="clean,dist" description="Publish this build into repository">
-        <ivy:publish pubrevision="${pub.version}" status="${pub.status}" resolver="${pub.resolver}" >
+        <ivy:publish resolver="${pub.resolver}" overwrite="true">
             <artifacts pattern="${dist}/[artifact].[ext]"/>
         </ivy:publish>
     </target>
