@@ -44,6 +44,8 @@ import blackboard.platform.context.ContextManagerFactory;
 import blackboard.platform.log.LogService;
 import blackboard.platform.log.LogServiceFactory;
 import blackboard.platform.persistence.PersistenceServiceFactory;
+import blackboard.platform.security.CourseRole;
+import blackboard.platform.security.persist.CourseRoleDbLoader;
 
 public class B2Util 
 {
@@ -493,4 +495,23 @@ public class B2Util
 	public static String getCurrentUsername(HttpServletRequest request) {
 		return getCurrentUser(request).getUserName();
 	}
+	
+	/**
+	 * Return all roles in the system
+	 * 
+	 * @return List of roles
+	 */
+	public static List<CourseRole> getCourseRoles() {  
+		List<CourseRole> roles = null;
+		try {
+			BbPersistenceManager pm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
+			CourseRoleDbLoader crLoader = (CourseRoleDbLoader) pm.getLoader("CourseRoleDbLoader");
+			roles = crLoader.loadAll();
+		} catch (PersistenceException e) {
+			throw new RuntimeException("Failed to load roles!", e);
+		}
+
+		return roles;
+	}
+	
 }
