@@ -149,16 +149,20 @@ public class B2Util
 //	}
 	
 	/**
-	 * Get the class size for the course
+	 * Get the class size for the course, only count active students
 	 * @return
 	 * @throws PersistenceException
 	 */
 	public static int getClassSize(String courseIdStr) throws PersistenceException {
-		Id courseId = Id.generateId(Course.DATA_TYPE, courseIdStr);
-		CourseMembershipDbLoader cmLoader = CourseMembershipDbLoader.Default.getInstance();
-		Map<Id, Id> map = cmLoader.loadIdByCourseIdQuery(courseId);
+		List<CourseMembership> list = getBbUsersInCourse(courseIdStr, CourseMembership.Role.STUDENT, false);
+		int size = 0;
+		for (CourseMembership membership : list) {
+			if(membership.getIsAvailable()) {
+				size++;
+			}
+		}
 		
-		return map.size();
+		return size;
 	}
 	
 	/**
@@ -307,18 +311,52 @@ public class B2Util
 		return adapter.bbUserToUser(user);
 	}
 	
-	public static List<CourseMembership> getUsersInCourse(String courseIdStr) throws PersistenceException {
+	public static List<CourseMembership> getBbUsersInCourse(String courseIdStr) throws PersistenceException {
+		return getBbUsersInCourse(courseIdStr, null);
+	}
+	
+	public static List<CourseMembership> getBbUsersInCourse(String courseIdStr, CourseMembership.Role role) throws PersistenceException {
+		return getBbUsersInCourse(courseIdStr, role, true);
+	}
+	
+	public static List<CourseMembership> getBbUsersInCourse(String courseIdStr, CourseMembership.Role role, boolean isHeavy) throws PersistenceException {
 		CourseMembershipDbLoader courseMembershipLoader = CourseMembershipDbLoader.Default.getInstance();
 		Id courseId = Id.generateId(Course.DATA_TYPE, courseIdStr);
 		// Load course membership with user
-		return courseMembershipLoader.loadByCourseId(courseId, null, true);
+		if (null != role) {
+			return courseMembershipLoader.loadByCourseIdAndRole(courseId, role, null, isHeavy);
+		} else {
+			return courseMembershipLoader.loadByCourseId(courseId, null, isHeavy);
+		}
 	}
 	
-	public static <T> List<T> getUsersInCourse(String courseIdStr, UserAdapter<T> adapter) throws PersistenceException {
-		List<CourseMembership> memberships = getUsersInCourse(courseIdStr);
+	public static <T> List<T> getActiveUsersInCourse(String courseIdStr, UserAdapter<T> adapter) throws PersistenceException {
+		return getUsersInCourse(courseIdStr, adapter, true);
+	}
+	
+	public static <T> List<T> getAllUsersInCourse(String courseIdStr, UserAdapter<T> adapter) throws PersistenceException {
+		return getUsersInCourse(courseIdStr, adapter, false);
+	}
+	
+	public static <T> List<T> getUsersInCourse(String courseIdStr, UserAdapter<T> adapter, boolean onlyActive) throws PersistenceException {
+		List<CourseMembership> memberships = getBbUsersInCourse(courseIdStr);
 		List<T> ret = new ArrayList<T>();
 		for(CourseMembership membership : memberships) {
-			ret.add(adapter.bbUserToUser(membership));
+			if(!onlyActive || membership.getIsAvailable()) {
+				ret.add(adapter.bbUserToUser(membership));
+			}
+		}
+		
+		return ret;
+	}
+	
+	public static <T> List<T> getActiveStudentsInCourse(String courseIdStr, UserAdapter<T> adapter) throws PersistenceException {
+		List<CourseMembership> memberships = getBbUsersInCourse(courseIdStr, CourseMembership.Role.STUDENT);
+		List<T> ret = new ArrayList<T>();
+		for(CourseMembership membership : memberships) {
+			if(membership.getIsAvailable()) {
+				ret.add(adapter.bbUserToUser(membership));
+			}
 		}
 		
 		return ret;
