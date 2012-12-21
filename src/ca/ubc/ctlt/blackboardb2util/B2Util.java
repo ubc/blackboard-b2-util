@@ -412,8 +412,9 @@ public class B2Util
 		for (T user : users) {
 			User bbUser = adapter.userToBbUser(user);
 			for (CourseMembership membership : memberships) {
-				if(membership.getUser().getBatchUid().equals(bbUser.getUserName())) {
+				if(membership.getUser().getBatchUid().equals(bbUser.getBatchUid())) {
 					idsToBeAdded.add(membership.getId());
+					System.out.println("bb BUID to be add: "+membership.getUser().getBatchUid());
 				}
 			}
 		}
