@@ -7,7 +7,6 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -413,7 +412,7 @@ public class B2Util
 		for (T user : users) {
 			User bbUser = adapter.userToBbUser(user);
 			for (CourseMembership membership : memberships) {
-				if(membership.getUser().getUserName().equals(bbUser.getUserName())) {
+				if(membership.getUser().getBatchUid().equals(bbUser.getUserName())) {
 					idsToBeAdded.add(membership.getId());
 				}
 			}
