@@ -152,8 +152,11 @@ public class B2Util
 	 * @return
 	 * @throws PersistenceException
 	 */
-	public static int getClassSize(String courseIdStr) throws PersistenceException {
-		List<CourseMembership> list = getBbUsersInCourse(courseIdStr, CourseMembership.Role.STUDENT, false);
+	public static int getClassSize(String courseIdStr, List<CourseMembership.Role> roles) throws PersistenceException {
+		List<CourseMembership> list = new ArrayList<CourseMembership>();
+		for(CourseMembership.Role role : roles) {
+			list.addAll(getBbUsersInCourse(courseIdStr, role, false));
+		}
 		int size = 0;
 		for (CourseMembership membership : list) {
 			if(membership.getIsAvailable()) {
@@ -371,6 +374,16 @@ public class B2Util
 		bbGroup.setTitle(groupTitle);
 		bbGroup.setCourseId(courseId);
 		bbGroup.setSetId(setId);
+		bbGroup.setIsAvailable(true);
+		
+		return createGroup(bbGroup);
+	}
+	
+	public static <T> Group createGroup(String courseIdStr, T group, GroupAdapter<T> adapter) throws PersistenceException, ValidationException {
+		Id courseId = Id.generateId(Course.DATA_TYPE, courseIdStr);
+		Group bbGroup = adapter.groupToBbGroup(group);
+		bbGroup.setCourseId(courseId);
+		bbGroup.setIsAvailable(true);
 		
 		return createGroup(bbGroup);
 	}
@@ -384,6 +397,7 @@ public class B2Util
 	 * @throws ValidationException
 	 */
 	public static Group createGroup(Group group) throws PersistenceException, ValidationException {
+		LOG.logDebug("Creating group " + group.getTitle());
 		BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
 		GroupDbPersister groupDbPersister = (GroupDbPersister) bbPm.getPersister(GroupDbPersister.TYPE);
 		
@@ -392,12 +406,6 @@ public class B2Util
 		return group;
 	}
 	
-	public static <T> Group createGroup(String courseIdStr, T group, GroupAdapter<T> adapter) throws PersistenceException, ValidationException {
-		Id courseId = Id.generateId(Course.DATA_TYPE, courseIdStr);
-		Group bbGroup = adapter.groupToBbGroup(group);
-		bbGroup.setCourseId(courseId);
-		return createGroup(bbGroup);
-	}
 	
 	public static boolean enrolUsersInGroup(Group group, Set<Id> courseMembershipIds) {
 		GroupMembershipDAO.get().setGroupMembers(group.getId(), courseMembershipIds);
