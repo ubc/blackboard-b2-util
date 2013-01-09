@@ -539,7 +539,7 @@ public class B2Util
 	}
 	
 	public static String getCurrentUsername(HttpServletRequest request) {
-		return getCurrentUser(request).getUserName();
+		return getCurrentUser(request).getBatchUid();
 	}
 	
 	/**

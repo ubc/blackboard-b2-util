@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE ivy-module>
 <ivy-module version="2.0">
-    <info organisation="ca.ubc.ctlt" module="blackboard-b2-util" revision="1.0.5"/>
+    <info organisation="ca.ubc.ctlt" module="blackboard-b2-util" revision="1.0.6"/>
     <publications>
         <artifact ext="jar" type="jar"/>
     </publications>
