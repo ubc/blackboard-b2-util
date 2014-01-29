@@ -7,6 +7,9 @@
     </publications>
 
     <dependencies>
-         <dependency org="javax.servlet" name="servlet-api" rev="2.5" transitive="false"/>
+        <dependency org="javax.servlet" name="servlet-api" rev="2.5" transitive="false"/>
+        <dependency org="blackboard.platform" name="bb-platform" rev="9.1.120113.0" transitive="false"/>
+        <dependency org="blackboard.platform" name="bb-platform" rev="9.1.120113.0" transitive="false"/>
+        <dependency org="blackboard.platform" name="bb-taglibs" rev="9.1.120113.0" transitive="false"/>
     </dependencies>
 </ivy-module>
