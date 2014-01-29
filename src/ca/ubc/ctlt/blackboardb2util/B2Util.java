@@ -506,7 +506,7 @@ public class B2Util
 		
 		for (T grade : grades) {
 			Score score = adapter.gradeToBbScore(grade, memberships);
-            if (score != null) {
+            if (score == null) {
                 failedGrades.add(grade);
             } else {
                 scores.add(score);
