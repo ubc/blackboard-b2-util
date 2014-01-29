@@ -7,7 +7,7 @@
     <property name="b2context.url" value="http://projects.oscelot.org/gf/download/frsrelease/669/4384/"/>
     <property name="b2context.zip_basename" value="B2Context-1.2.00"/>
     <property name="b2context.jar" value="b2context-1.2.00.jar"/>
-    <property name="pub.resolver" value="ctlt-repo"/>
+    <property name="pub.resolver" value="local"/>
 
     <path id="classpath.master">
         <pathelement path="${build}"/>
