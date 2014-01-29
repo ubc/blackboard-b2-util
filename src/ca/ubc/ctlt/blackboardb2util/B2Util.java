@@ -482,10 +482,20 @@ public class B2Util
 		
 		return true;
 	}
-	
-	public static <T> boolean setGradebook(String courseIdStr, String name, List<T> grades, GradeAdapter<T> adapter) {
+
+    /**
+     * Set the gradebook using an GradeAdapter
+     * @param courseIdStr BB course ID string
+     * @param name gradebook column name
+     * @param grades list of grades
+     * @param adapter grade adapter
+     * @param <T>
+     * @return the grades that are set unsuccessful
+     */
+	public static <T> List<T> setGradebook(String courseIdStr, String name, List<T> grades, GradeAdapter<T> adapter) {
 		List<Score> scores = new ArrayList<Score>();
 		Id courseId = null;
+        List<T> failedGrades = new ArrayList<T>();
 		List<CourseMembership> memberships = null;
 		try {
 			courseId = Id.generateId(Course.DATA_TYPE, courseIdStr);
@@ -496,10 +506,16 @@ public class B2Util
 		
 		for (T grade : grades) {
 			Score score = adapter.gradeToBbScore(grade, memberships);
-			scores.add(score);
+            if (score != null) {
+                failedGrades.add(grade);
+            } else {
+                scores.add(score);
+            }
 		}
-		
-		return setGradebook(courseId, name, scores);
+
+        setGradebook(courseId, name, scores);
+
+		return failedGrades;
 	}
 	
 	public static OutcomeDefinitionCategory getOutcomeDefinitionCategory(Id courseId, String title) {
