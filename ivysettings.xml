@@ -5,6 +5,7 @@
   <credentials host="artifactory.ctlt.ubc.ca" realm="Artifactory Realm" username="admin" passwd="" />
   <resolvers>
     <chain name="main">
+      <ibiblio name="ctlt-repo" m2compatible="true" root="http://artifactory.ctlt.ubc.ca/artifactory/repo" />
       <ibiblio name="bb-repo" m2compatible="true" root="https://maven.blackboard.com/content/repositories/releases/" />
       <ibiblio name="public" m2compatible="true"/>
     </chain>
