@@ -46,11 +46,11 @@ import blackboard.platform.persistence.PersistenceServiceFactory;
 import blackboard.platform.security.CourseRole;
 import blackboard.platform.security.persist.CourseRoleDbLoader;
 
-public class B2Util 
+public class B2Util
 {
 	private Context ctx;
 	private static final LogService LOG = LogServiceFactory.getInstance();
-	
+
 	private HashMap<String, User> usersByUsername = new HashMap<String, User>();
 	private HashMap<String, User> usersByStudentId = new HashMap<String, User>();
 
@@ -93,11 +93,11 @@ public class B2Util
 
 	public B2Util(Context ctx, Connection db) throws PersistenceException {
 		this.ctx = ctx;
-		
+
 		// prefetch user data for quick lookup later
 		UserDbLoader userLoader = UserDbLoader.Default.getInstance();
 		List<User> tmpUsers = userLoader.loadByCourseId(ctx.getCourseId());
-		for (User user : tmpUsers) 
+		for (User user : tmpUsers)
 		{
 			// Map username to User object
 			usersByUsername.put(user.getUserName(), user);
@@ -108,7 +108,7 @@ public class B2Util
 	public Context getContext() {
 		return ctx;
 	}
-	
+
 //	public Map<String, GroupSet> getGroupSets() throws PersistenceException
 //	{
 //		HashMap<String, GroupSet> sets;
@@ -146,27 +146,37 @@ public class B2Util
 //		LOG.logDebug(sets.toString());
 //		return sets;
 //	}
-	
+
 	/**
 	 * Get the class size for the course, only count active students
 	 * @return
 	 * @throws PersistenceException
 	 */
 	public static int getClassSize(String courseIdStr, List<CourseMembership.Role> roles) throws PersistenceException {
-		List<CourseMembership> list = new ArrayList<CourseMembership>();
-		for(CourseMembership.Role role : roles) {
-			list.addAll(getBbUsersInCourse(courseIdStr, role, false));
-		}
-		int size = 0;
-		for (CourseMembership membership : list) {
-			if(membership.getIsAvailable()) {
-				size++;
-			}
-		}
-		
-		return size;
+//		List<CourseMembership> list = new ArrayList<CourseMembership>();
+//		for(CourseMembership.Role role : roles) {
+//			list.addAll(getBbUsersInCourse(courseIdStr, role, false));
+//		}
+//		int size = 0;
+//		for (CourseMembership membership : list) {
+//			if(membership.getIsAvailable()) {
+//				size++;
+//			}
+//		}
+//
+//		return size;
+        return getBbMembershipInCourseByRoles(courseIdStr, roles).size();
 	}
-	
+
+    /**
+     * Get the class size for the course, only count active students
+     * @return
+     * @throws PersistenceException
+     */
+    public static int getActiveClassSize(String courseIdStr, List<CourseMembership.Role> roles) throws PersistenceException {
+        return getBbActiveMembershipInCourseByRoles(courseIdStr, roles).size();
+    }
+
 	/**
 	 * Filter out Group objects that actually represent groupsets and return the list of groups
 	 * that are actually groups.
@@ -175,18 +185,18 @@ public class B2Util
 	 */
 	public List<Group> getGroups() throws PersistenceException {
 		List<Group> ret = new ArrayList<Group>();
-		
+
 		List<Group> bbGroups = getAllBbGroups(ctx.getCourseId());
-		
+
 		for(Group group : bbGroups) {
 			if (!group.isGroupSet()) {
 				ret.add(group);
 			}
 		}
-		
+
 		return ret;
 	}
-	
+
 //	protected HashMap<String, GroupSet> getSets (Id courseId) {
 //		HashMap<String, GroupSet> sets = new HashMap<String, GroupSet>();
 //		
@@ -206,44 +216,44 @@ public class B2Util
 //	
 //		return sets;
 //	}
-	
+
 	public static List<Group> getAllBbGroups(Id courseId) throws PersistenceException {
 		List<Group> courseGroups = null;
 		GroupDbLoader groupLoader =  GroupDbLoader.Default.getInstance();
 		courseGroups = groupLoader.loadByCourseId(courseId);
 		return courseGroups;
 	}
-	
+
 	public static <T> List<T> getGroupsInCourse(String courseIdStr, GroupAdapter<T> adapter) throws PersistenceException {
-		List<T> ret = new ArrayList<T>(); 
+		List<T> ret = new ArrayList<T>();
 		Id courseId = Id.generateId(Course.DATA_TYPE, courseIdStr);
 		List<Group> groups = getAllBbGroups(courseId);
 		for(Group group : groups) {
 			ret.add(adapter.bbGroupToGroup(group));
 		}
-		
+
 		return ret;
 	}
-	
+
 	public static List<User> getUsersInGroup(String groupId) throws PersistenceException, ConnectionNotAvailableException {
 		if (groupId == null || groupId.isEmpty()) {
 			return new ArrayList<User>();
 		}
-		
+
 		// get the Group from ID
 		GroupDbLoader gLoader = GroupDbLoader.Default.getInstance();
 		Group group = gLoader.loadById(Id.generateId(Group.DATA_TYPE, groupId));
-		
+
 		return getUsersInGroup(group);
 	}
-	
+
 	public static List<CourseMembership> getCourseMembershipsInGroup(Group group) throws PersistenceException, ConnectionNotAvailableException {
 		// To get a list of users in a group, we have to traverse a hierarchy of data relations.
 		// The hierarchy goes Group -> GroupMembership -> CourseMembership -> User
-		
+
 		// First we get the list of GroupMemberships in the Group
 		List<GroupMembership> groupMembers = group.getGroupMemberships();
-		
+
 		// From each GroupMembership, we can get the CourseMembership
 		CourseMembershipDbLoader cmLoader = CourseMembershipDbLoader.Default.getInstance();
 		List<CourseMembership> courseMembers = new ArrayList<CourseMembership>();
@@ -254,30 +264,34 @@ public class B2Util
 
 		return courseMembers;
 	}
-	
+
 	public static List<User> getUsersInGroup(Group group) throws PersistenceException, ConnectionNotAvailableException {
 		List<User> ret = new ArrayList<User>();
-		
+
 		List<CourseMembership> memberships = getCourseMembershipsInGroup(group);
 		// From the CourseMembership, we can get the Users
 		for (CourseMembership member : memberships) {
-			ret.add(member.getUser());
+            if (member.getIsAvailable()) {
+			    ret.add(member.getUser());
+            }
 		}
-		
+
 		return ret;
 	}
-	
+
 	public static <T> List<T> getUsersInGroup(Group group, UserAdapter<T> adapter) throws PersistenceException, ConnectionNotAvailableException {
 		List<CourseMembership> memberships = getCourseMembershipsInGroup(group);
 		List<T> ret = new ArrayList<T>();
 		for(CourseMembership membership : memberships) {
-			ret.add(adapter.bbUserToUser(membership));
+            if (membership.getIsAvailable()) {
+			    ret.add(adapter.bbUserToUser(membership));
+            }
 		}
-		
+
 		return ret;
 	}
-	
-	public User findUserByUsername(String username) 
+
+	public User findUserByUsername(String username)
 	{
 		User user = usersByUsername.get(username);
 		if (user == null)
@@ -286,19 +300,19 @@ public class B2Util
 		}
 		return user;
 	}
-	
+
 	public <T> T findUserByUsername(String username, UserAdapter<T> adapter){
 		User user = findUserByUsername(username);
 		return adapter.bbUserToUser(user);
 	}
-	
+
 	/**
 	 * Given a student id, load the user object by searching the class list for
 	 * a user with the matching student id.
-	 * 
+	 *
 	 * @param studentId
 	 */
-	public User findUserByStudentId(String studentId) 
+	public User findUserByStudentId(String studentId)
 	{
 		User user = usersByStudentId.get(studentId);
 		if (user == null)
@@ -307,20 +321,20 @@ public class B2Util
 		}
 		return user;
 	}
-	
+
 	public <T> T findUserByStudentId(String studentId, UserAdapter<T> adapter){
 		User user = findUserByStudentId(studentId);
 		return adapter.bbUserToUser(user);
 	}
-	
+
 	public static List<CourseMembership> getBbUsersInCourse(String courseIdStr) throws PersistenceException {
 		return getBbUsersInCourse(courseIdStr, null);
 	}
-	
+
 	public static List<CourseMembership> getBbUsersInCourse(String courseIdStr, CourseMembership.Role role) throws PersistenceException {
 		return getBbUsersInCourse(courseIdStr, role, true);
 	}
-	
+
 	public static List<CourseMembership> getBbUsersInCourse(String courseIdStr, CourseMembership.Role role, boolean isHeavy) throws PersistenceException {
 		CourseMembershipDbLoader courseMembershipLoader = CourseMembershipDbLoader.Default.getInstance();
 		Id courseId = Id.generateId(Course.DATA_TYPE, courseIdStr);
@@ -331,15 +345,36 @@ public class B2Util
 			return courseMembershipLoader.loadByCourseId(courseId, null, isHeavy);
 		}
 	}
-	
+
+    public static List<CourseMembership> getBbMembershipInCourseByRoles(String courseIdStr, List<CourseMembership.Role> roles) throws PersistenceException {
+        CourseMembershipDbLoader courseMembershipLoader = CourseMembershipDbLoader.Default.getInstance();
+        Id courseId = Id.generateId(Course.DATA_TYPE, courseIdStr);
+
+        // Load course membership by roles
+        return courseMembershipLoader.loadByCourseIdAndRoles(courseId, roles);
+    }
+
+    public static List<CourseMembership> getBbActiveMembershipInCourseByRoles(String courseIdStr, List<CourseMembership.Role> roles) throws PersistenceException {
+        List<CourseMembership> memberships = getBbMembershipInCourseByRoles(courseIdStr, roles);
+        List<CourseMembership> activeMemberships = new ArrayList<CourseMembership>();
+
+        for (CourseMembership membership : memberships) {
+            if (membership.getIsAvailable()) {
+                activeMemberships.add(membership);
+            }
+        }
+
+        return activeMemberships;
+    }
+
 	public static <T> List<T> getActiveUsersInCourse(String courseIdStr, UserAdapter<T> adapter) throws PersistenceException {
 		return getUsersInCourse(courseIdStr, adapter, true);
 	}
-	
+
 	public static <T> List<T> getAllUsersInCourse(String courseIdStr, UserAdapter<T> adapter) throws PersistenceException {
 		return getUsersInCourse(courseIdStr, adapter, false);
 	}
-	
+
 	public static <T> List<T> getUsersInCourse(String courseIdStr, UserAdapter<T> adapter, boolean onlyActive) throws PersistenceException {
 		List<CourseMembership> memberships = getBbUsersInCourse(courseIdStr);
 		List<T> ret = new ArrayList<T>();
@@ -348,10 +383,10 @@ public class B2Util
 				ret.add(adapter.bbUserToUser(membership));
 			}
 		}
-		
+
 		return ret;
 	}
-	
+
 	public static <T> List<T> getActiveStudentsInCourse(String courseIdStr, UserAdapter<T> adapter) throws PersistenceException {
 		List<CourseMembership> memberships = getBbUsersInCourse(courseIdStr, CourseMembership.Role.STUDENT);
 		List<T> ret = new ArrayList<T>();
@@ -360,14 +395,14 @@ public class B2Util
 				ret.add(adapter.bbUserToUser(membership));
 			}
 		}
-		
+
 		return ret;
 	}
-	
+
 	public static Group createGroup(Id courseId, String groupTitle) throws PersistenceException, ValidationException {
 		return createGroup(courseId, groupTitle, null);
 	}
-	
+
 	public static Group createGroup(Id courseId, String groupTitle, Id setId) throws PersistenceException, ValidationException {
 		// create the group
 		Group bbGroup = new Group();
@@ -375,22 +410,22 @@ public class B2Util
 		bbGroup.setCourseId(courseId);
 		bbGroup.setSetId(setId);
 		bbGroup.setIsAvailable(true);
-		
+
 		return createGroup(bbGroup);
 	}
-	
+
 	public static <T> Group createGroup(String courseIdStr, T group, GroupAdapter<T> adapter) throws PersistenceException, ValidationException {
 		Id courseId = Id.generateId(Course.DATA_TYPE, courseIdStr);
 		Group bbGroup = adapter.groupToBbGroup(group);
 		bbGroup.setCourseId(courseId);
 		bbGroup.setIsAvailable(true);
-		
+
 		return createGroup(bbGroup);
 	}
-	
+
 	/**
 	 * Create a group in BB with BB group. Assuming the group already have course ID
-	 * 
+	 *
 	 * @param group
 	 * @return the group created
 	 * @throws PersistenceException
@@ -400,23 +435,23 @@ public class B2Util
 		LOG.logDebug("Creating group " + group.getTitle());
 		BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
 		GroupDbPersister groupDbPersister = (GroupDbPersister) bbPm.getPersister(GroupDbPersister.TYPE);
-		
+
 		groupDbPersister.persist(group);
-		
+
 		return group;
 	}
-	
-	
+
+
 	public static boolean enrolUsersInGroup(Group group, Set<Id> courseMembershipIds) {
 		GroupMembershipDAO.get().setGroupMembers(group.getId(), courseMembershipIds);
 
 		return true;
 	}
-	
+
 	public static <T> boolean setUsersInGroup(Group group, List<T> users, UserAdapter<T> adapter) throws PersistenceException {
 		Set<Id> idsToBeAdded = new HashSet<Id>();
 		List<CourseMembership> memberships = CourseMembershipDbLoader.Default.getInstance().loadByCourseId(group.getCourseId(), null, true);
-		
+
 		for (T user : users) {
 			User bbUser = adapter.userToBbUser(user);
 			for (CourseMembership membership : memberships) {
@@ -426,12 +461,12 @@ public class B2Util
 				}
 			}
 		}
-		
+
 		return enrolUsersInGroup(group, idsToBeAdded);
 	}
-	
+
 	/************* Grades ***************/
-	
+
 	public static boolean setGradebook(Id courseId, String name, List<Score> scores) {
 		List<Lineitem> lineitems = null;
 		try {
@@ -441,7 +476,7 @@ public class B2Util
 		} catch (PersistenceException e) {
 			throw new RuntimeException("Load course with ID " + courseId.toExternalString() +" failed!", e);
 		}
-		
+
 		Lineitem item = null;
 		// check if the column exists
 		if (lineitems.size() == 1) {
@@ -465,12 +500,12 @@ public class B2Util
 		} else {
 			throw new RuntimeException("Found multiple gradebook columns matching name " + name + "!");
 		}
-		
+
 		// associate all scores to the lineitem
 		for (Score score : scores) {
 			score.setLineitemId(item.getId());
 		}
-		
+
 		// save the scores
 		try {
 			ScoreDbPersister.Default.getInstance().persist(scores);
@@ -479,7 +514,7 @@ public class B2Util
 		} catch (ValidationException e) {
 			throw new RuntimeException("Invalid score to save!", e);
 		}
-		
+
 		return true;
 	}
 
@@ -503,7 +538,7 @@ public class B2Util
 		} catch (PersistenceException e) {
 			throw new RuntimeException("Failed to load course membership!", e);
 		}
-		
+
 		for (T grade : grades) {
 			Score score = adapter.gradeToBbScore(grade, memberships);
             if (score == null) {
@@ -517,10 +552,10 @@ public class B2Util
 
 		return failedGrades;
 	}
-	
+
 	public static OutcomeDefinitionCategory getOutcomeDefinitionCategory(Id courseId, String title) {
 		OutcomeDefinitionCategory category = null;
-		try {	
+		try {
 			category = OutcomeDefinitionCategoryDbLoader.Default.getInstance().loadByCourseIdAndTitle(courseId, title);
 		} catch (KeyNotFoundException e) {
 			category = null;
@@ -545,25 +580,25 @@ public class B2Util
 				throw new RuntimeException("Invalid outcome category " + title + " to save!", e);
 			}
 		}
-		
+
 		return category;
 	}
-	
+
 	public static User getCurrentUser(HttpServletRequest request) {
 		Context context = ContextManagerFactory.getInstance().setContext(request);
 		return context.getUser();
 	}
-	
+
 	public static String getCurrentUsername(HttpServletRequest request) {
 		return getCurrentUser(request).getBatchUid();
 	}
-	
+
 	/**
 	 * Return all roles in the system
-	 * 
+	 *
 	 * @return List of roles
 	 */
-	public static List<CourseRole> getCourseRoles() {  
+	public static List<CourseRole> getCourseRoles() {
 		List<CourseRole> roles = null;
 		try {
 			BbPersistenceManager pm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
@@ -575,5 +610,5 @@ public class B2Util
 
 		return roles;
 	}
-	
+
 }
