@@ -259,8 +259,13 @@ public class B2Util {
         CourseMembershipDbLoader cmLoader = CourseMembershipDbLoader.Default.getInstance();
         List<CourseMembership> courseMembers = new ArrayList<CourseMembership>();
         for (GroupMembership gmember : groupMembers) {
-            CourseMembership cmember = cmLoader.loadById(gmember.getCourseMembershipId(), null, true);
-            courseMembers.add(cmember);
+            try {
+                CourseMembership cmember = cmLoader.loadById(gmember.getCourseMembershipId(), null, true);
+                courseMembers.add(cmember);
+            } catch (KeyNotFoundException e) {
+                LOG.logWarning("Could not find Course Membership for user " +
+                        gmember.toString() + " in group " + gmember.getGroupId().toExternalString());
+            }
         }
 
         return courseMembers;
