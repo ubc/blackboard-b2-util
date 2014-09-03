@@ -3,6 +3,7 @@ dist/
 build/
 build.test/
 reports/
+repos/
 lib/*.jar
 *.swp
 *.class
@@ -21,3 +22,4 @@ local.properties
 # Package Files #
 *.war
 *.ear
+.gradle

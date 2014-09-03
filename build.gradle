@@ -1,0 +1,57 @@
+apply plugin: 'java'
+apply plugin: 'ivy-publish'
+
+version = '1.0.10'
+group = "ca.ubc.ctlt"
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.0'
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        // Blackboard Maven Repo
+        url "https://maven.blackboard.com/content/repositories/releases"
+    }
+}
+
+ext {
+    bblVer = "9.1.120113.0" // we're on sp13, but BB maven stuck on sp12
+    bblServer = "bblvm" // CHANGEME: the BBL server to deploy to
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+    }
+}
+
+dependencies {
+    // providedCompile are dependencies that don't need to go into the war file
+    // regular compile is for dependencies that needs to go into the war file
+
+    // Blackboard provided libraries
+    compile "blackboard.platform:bb-platform:$bblVer" // main B2 APIs
+    compile "blackboard.platform:bb-taglibs:$bblVer" // bbNG tags
+    compile "blackboard.platform:bb-bbxythos:$bblVer" // content system
+
+    // Java servlet api, we're stuck with 2.5 cause BBL uses tomcat 6
+    compile 'javax.servlet:servlet-api:2.5'
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'B2Uti', 'Implementation-Version': version
+    }
+}
+
+uploadArchives {
+    repositories {
+        flatDir {
+            dirs 'repos'
+        }
+    }
+}

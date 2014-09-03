@@ -1,6 +1,0 @@
-# Change this to your BB SDK
-bb.sdk=/path/to/bbsdk
-bb.server=192.168.56.101
-
-# Used by compatibility check
-contact=yourname@yourcompany.com
