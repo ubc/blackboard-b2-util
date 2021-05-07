@@ -9,7 +9,9 @@ task wrapper(type: Wrapper) {
 }
 
 repositories {
-    mavenCentral()
+    maven {
+        url "https://repo1.maven.org/maven2"
+    }
     maven {
         // Blackboard Maven Repo
         url "https://maven.blackboard.com/content/repositories/releases"
